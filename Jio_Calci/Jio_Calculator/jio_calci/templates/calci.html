@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>Azure Calculator</title>
+</head>
+<body>
+<div class="container mt-5" style="width: 40%">
+    <h1 style="background-color:rgb(15, 74, 237);color:white;">Jio Cloud Pricing Calculator</h1>
+
+    
+    <label for="Categorys">Category</label>
+    <select class="form-select" aria-label="Default select example" id="category"  onchange="categoryField()">
+        <option selected>Choose Category</option><span class="category_item"></span>
+        {% for i in category %}
+            <option value="{{i.id}}" {% if request.GET.category == i.id|lower %}selected{% endif %}>{{i.name}}</option>
+        {% endfor %}
+    </select>
+    <br/>
+    <label for="Sub categorys">Sub Category</label>
+    <select class="form-select" aria-label="Default select example" id="subcategory"  onchange="subcategoryField()">
+        <option selected>Choose Category First</option>
+        {% for i in subcategory %}
+            <option value="{{i.id}}" {% if request.GET.subcategory == i.id|lower %}selected{% endif %}>{{i.name}}</option>
+        {% endfor %}
+    </select>
+    <br/>
+    <label for="Product_names">Product Name</label>
+    <select class="form-select" aria-label="Default select example" id="productname"  onchange="productnameField()">
+        <option selected>Choose Product Name</option>
+        {% for i in productname %}
+            <option value="{{i.id}}"{% if request.GET.productname == i.id|lower %}selected{% endif %}>{{i.name}}</option>
+        {% endfor %}
+    </select>
+    <br/>
+    <label for="Sku_names">SKuName</label>
+    <select class="form-select" aria-label="Default select example" id="skuname"  onchange="SKuNameField()">
+        <option selected>Choose Product Name First</option>
+        {% for i in skuname %}
+            <option value="{{i.id}}"{% if request.GET.skuname == i.id|lower %}selected{% endif %}>{{i.name}}</option>
+        {% endfor %}
+    </select>
+    <br/>
+    <label for ="DisplayCost">Rate: </label>
+    <input type = "number" id="displaycost" value ="{{rateid}}" readonly> <label for ="rupeessign"><b>&#8377/hour</b></label>
+    <br/>
+    <br/>
+
+    <label for = "instances">Quantity: </label>
+    <form oninput="x.value=parseInt(instance.value)*parseInt(ins.value)">
+        <input type ="number" id = "instance" value="" onchange="ratecost()"> * <input type="number" id ="ins" value="730" onchange="ratecost()"><select name="Time" id="time"><option value="730" >Hours</option><option value = "31">Day</option><option value ="1">Month</option></select>
+    </form>
+        <br/>
+        <br/>
+    <label for ="cost without discount">Cost Without Discount</label> 
+    <input type="number" id = "costwithoutdis" value="" readonly> <label for ="rupeessign"><b>&#8377</b></label>
+    <br/>
+    <br/>    
+    <label for ="additional discount">Add Discount: </label>
+    <input type="text" id ="discount" value="0" onchange="adddiscount()"> <label for ="percentsign"><b>%</b></label>
+    <br/>
+    <br/>
+
+    <label for ="Display final cost estimation">Cost Estimation: </label>
+        <input type="number" id ="dfce" value="" readonly> <label for ="rupeessign"><b>&#8377</b></label>
+    <br/>
+    <br/>
+    <input type="button" id="save" value="save" onchange="Savingdata()">
+    <input type ="button" id ="export" value="Export to excel" onchange="exportdata()">
+    <input type="button" id = "print" value="Print" onchange="printdata()">
+    
+    <button onclick="displayestimate()">Add to Estimate</button>
+    <div id ="mydiv"  style="padding:16px;background-color:lightgray">
+
+        {% for i in my_items_list %}    
+            <label >{{i.category}}</label>
+            <labe>{{i.subcategory}}</label>
+            <label>{{i.productname}}</label>
+            <label>{{i.skuname}}</label>
+            <label>{{i.Rate}}</label>
+        {% endfor %}
+        <label id="old_item_list" readonly value="{{my_items_list}}"></label>
+    </div>
+
+
+    
+</div>
+<script>
+    function categoryField(){
+        categoryid = document.getElementById('category').value;
+        window.location = "/?category="+categoryid;
+        
+    }
+    function subcategoryField(){
+        subcategoryid = document.getElementById('subcategory').value;
+       window.location = "/?category="+'{{request.GET.category}}'+"&subcategory="+subcategoryid;
+    }
+    function productnameField(){
+        productnameid = document.getElementById('productname').value;
+        window.location = "/?category="+'{{request.GET.category}}'+"&subcategory="+'{{request.GET.subcategory}}'+"&productname="+productnameid; 
+    }
+    function SKuNameField(){
+        SKuNameid = document.getElementById('skuname').value;
+        window.location = "/?category="+'{{request.GET.category}}'+"&subcategory="+'{{request.GET.subcategory}}'+"&productname="+'{{request.GET.productname}}'+"&skuname="+SKuNameid;
+    }
+    function increment(){
+        document.getElementById('instance').stepUp();
+    }
+    function decrement(){
+        document.getElementById('instance').stepDown();
+    }
+    function ratecost(){
+        finalcost = document.getElementById('displaycost').value;
+        finalins = document.getElementById('instance').value;
+        finaltime = document.getElementById('ins').value;
+        finalcal = finalcost*finalins*finaltime;
+        document.getElementById('costwithoutdis').value=finalcal;
+    }
+    function adddiscount(){
+        cstwithoutdiscount = document.getElementById('costwithoutdis').value;
+        dscount=document.getElementById('discount').value;
+        discountedprice=cstwithoutdiscount-(cstwithoutdiscount*dscount/100);
+        document.getElementById('dfce').value=discountedprice;
+    }
+    function Savingdata(){
+        categorydata = localStorage.getItem("category",categoryid);
+        subcategorydata = localStorage.getItem("subcategory",subcategoryid);
+        productnamedata= localStorage.getItem("productname",productnameid);
+        skunamedata = localStorage.getItem("skuname",SKuNameid);
+
+    }
+
+    function displayestimate(selectObject){
+
+
+        const label = document.createElement("label"); 
+        category_item_id = document.getElementById("category");
+        var options="";
+        
+        value = category_item_id.value;
+        label.innerHTML= category_item_id.options[category_item_id.selectedIndex].text;
+        old_item_list1 = document.getElementById('old_item_list').value;
+
+    //appending element to another element 
+        document.getElementById("mydiv").appendChild(label);
+        window.location = "/?category="+'{{request.GET.category}}'+"&subcategory="+'{{request.GET.subcategory}}'+"&productname="+'{{request.GET.productname}}'+"&skuname="+'{{request.GET.skuname}}'+"&addestimate=addesitmate";
+    }
+    
+     
+    
+
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+</body>
+</html>

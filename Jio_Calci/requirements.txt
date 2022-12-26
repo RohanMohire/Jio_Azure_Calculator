@@ -1,0 +1,11 @@
+django
+whitenoise
+django-extensions
+django-filter
+djangorestframework
+django-storages
+django-environ
+django-cors-headers
+django-summernote
+django-model-utils
+django-redis
